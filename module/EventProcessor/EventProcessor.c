@@ -6,7 +6,7 @@
 
 static char key_pressed_bitmap[32];
 
-void processEvent()
+void processEvent(SDL_Window *window)
 {
 	SDL_Event e;
 	while (SDL_PollEvent(&e))
@@ -110,6 +110,7 @@ void processEvent()
 			}
 		}
 	}
+
 	if (ifKeyPressed(SDL_SCANCODE_W))
 	{
 		eye_x += 0.05 * cos(forward_h);
@@ -129,6 +130,12 @@ void processEvent()
 	{
 		eye_x -= 0.05 * sin(forward_h);
 		eye_z += 0.05 * cos(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_ESCAPE))
+	{
+		SDL_DestroyWindow(window);
+		SDL_Quit();
+		exit(0);
 	}
 }
 
@@ -170,6 +177,10 @@ static void processMouseEvent(SDL_Event e)
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEWHEEL:
+		{
+			eye_y += e.wheel.y * 0.05f;
+			break;
+		}
 		default:
 		{
 			break;

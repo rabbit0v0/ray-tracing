@@ -27,15 +27,6 @@ enum Attrib_IDs
 
 const GLfloat pi = 3.141591653589793238462643383279502f;
 GLfloat sphere[20][20][2][3];
-/*
-bool mouse_check = false;
-bool key_w = false;
-bool key_s = false;
-bool key_a = false;
-bool key_d = false;
-GLfloat forward_h = 0.0f;
-GLfloat forward_v = pi;
-*/
 
 glm::mat4 ModelS = glm::mat4(1.0f);
 glm::mat4 ModelR = glm::mat4(1.0f);
@@ -77,11 +68,10 @@ int main()
 	gladLoadGLLoader(SDL_GL_GetProcAddress);
 	printf("OpenGL Version %s loaded.\n", glGetString(GL_VERSION));
 	SDL_SetRelativeMouseMode(SDL_TRUE);
-
 	init();
 	while (true)
 	{
-		processEvent();
+		processEvent(window);
 		display();
 		SDL_GL_SwapWindow(window);
 	}

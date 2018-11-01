@@ -16,7 +16,7 @@ float forward_h;
 /*
  * The main processor
  */
-void processEvent();
+void processEvent(SDL_Window *window);
 
 /*
  * This field list sub processors that process different kind of events
