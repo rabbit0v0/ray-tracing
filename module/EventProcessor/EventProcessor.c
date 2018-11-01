@@ -5,6 +5,7 @@
 #define PI 3.14159265358979323846264338327950288419716939937510582097
 
 static char key_pressed_bitmap[32];
+static float move_unit = 0.05;
 
 void processEvent(SDL_Window *window)
 {
@@ -15,6 +16,9 @@ void processEvent(SDL_Window *window)
 		{
 			case SDL_QUIT:
 			{
+				SDL_DestroyWindow(window);
+				SDL_Quit();
+				exit(0);
 				break;
 			}
 			case SDL_APP_TERMINATING:
@@ -111,25 +115,33 @@ void processEvent(SDL_Window *window)
 		}
 	}
 
+	if (ifKeyPressed(SDL_SCANCODE_LSHIFT))
+	{
+		move_unit = 0.0005;
+	}
+	else
+	{
+		move_unit = 0.05;
+	}
 	if (ifKeyPressed(SDL_SCANCODE_W))
 	{
-		eye_x += 0.05 * cos(forward_h);
-		eye_z += 0.05 * sin(forward_h);
+		eye_x += move_unit * cos(forward_h);
+		eye_z += move_unit * sin(forward_h);
 	}
 	if (ifKeyPressed(SDL_SCANCODE_S))
 	{
-		eye_x -= 0.05 * cos(forward_h);
-		eye_z -= 0.05 * sin(forward_h);
+		eye_x -= move_unit * cos(forward_h);
+		eye_z -= move_unit * sin(forward_h);
 	}
 	if (ifKeyPressed(SDL_SCANCODE_A))
 	{
-		eye_x += 0.05 * sin(forward_h);
-		eye_z -= 0.05 * cos(forward_h);
+		eye_x += move_unit * sin(forward_h);
+		eye_z -= move_unit * cos(forward_h);
 	}
 	if (ifKeyPressed(SDL_SCANCODE_D))
 	{
-		eye_x -= 0.05 * sin(forward_h);
-		eye_z += 0.05 * cos(forward_h);
+		eye_x -= move_unit * sin(forward_h);
+		eye_z += move_unit * cos(forward_h);
 	}
 	if (ifKeyPressed(SDL_SCANCODE_ESCAPE))
 	{
@@ -178,7 +190,7 @@ static void processMouseEvent(SDL_Event e)
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEWHEEL:
 		{
-			eye_y += e.wheel.y * 0.05f;
+			eye_y += e.wheel.y * move_unit;
 			break;
 		}
 		default:
