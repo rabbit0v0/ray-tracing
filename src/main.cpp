@@ -1,4 +1,5 @@
 #include "ShaderLoader.h"
+#include "EventProcessor.h"
 #include "glad/glad.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
@@ -26,15 +27,15 @@ enum Attrib_IDs
 
 const GLfloat pi = 3.141591653589793238462643383279502f;
 GLfloat sphere[20][20][2][3];
+/*
 bool mouse_check = false;
 bool key_w = false;
 bool key_s = false;
 bool key_a = false;
 bool key_d = false;
-
-glm::vec3 eye = glm::vec3(0.0f, 0.0f, -1.5f);
 GLfloat forward_h = 0.0f;
 GLfloat forward_v = pi;
+*/
 
 glm::mat4 ModelS = glm::mat4(1.0f);
 glm::mat4 ModelR = glm::mat4(1.0f);
@@ -78,122 +79,9 @@ int main()
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	init();
-	SDL_Event e;
 	while (true)
 	{
-		while (SDL_PollEvent(&e))
-		{
-			switch (e.type)
-			{
-				case SDL_QUIT:
-				{
-					SDL_DestroyWindow(window);
-					SDL_Quit();
-					return 0;
-				}
-				case SDL_MOUSEMOTION:
-				{
-					forward_v = std::fmin(forward_v - e.motion.yrel * 0.01f, pi / 2 - 0.00000001f);
-					forward_v = std::fmax(forward_v, -pi / 2 + 0.00000001f);
-					forward_h = fmod(forward_h + e.motion.xrel * 0.01f, 2 * pi);
-					break;
-				}
-				case SDL_MOUSEWHEEL:
-				{
-					eye.y += e.wheel.y * 0.01f;
-					break;
-				}
-				case SDL_KEYDOWN:
-				{
-					switch (e.key.keysym.scancode)
-					{
-						case SDL_SCANCODE_W:
-						{
-							key_w = true;
-							break;
-						}
-						case SDL_SCANCODE_S:
-						{
-							key_s = true;
-							break;
-						}
-						case SDL_SCANCODE_A:
-						{
-							key_a = true;
-							break;
-						}
-						case SDL_SCANCODE_D:
-						{
-							key_d = true;
-							break;
-						}
-						case SDL_SCANCODE_ESCAPE:
-						{
-							SDL_DestroyWindow(window);
-							SDL_Quit();
-							return 0;
-							break;
-						}
-						default:
-						{
-							break;
-						}
-					}
-					break;
-				}
-				case SDL_KEYUP:
-				{
-					switch (e.key.keysym.scancode)
-					{
-						case SDL_SCANCODE_W:
-						{
-							key_w = false;
-							break;
-						}
-						case SDL_SCANCODE_S:
-						{
-							key_s = false;
-							break;
-						}
-						case SDL_SCANCODE_A:
-						{
-							key_a = false;
-							break;
-						}
-						case SDL_SCANCODE_D:
-						{
-							key_d = false;
-							break;
-						}
-						default:
-						{
-							break;
-						}
-					}
-					break;
-				}
-				default:
-				{
-					break;
-				}
-			}
-		}
-		if (key_w)
-		{
-			eye += 0.05f * glm::vec3(cos(forward_h), 0.0f, sin(forward_h));
-		}
-		if (key_s)
-		{
-			eye -= 0.05f * glm::vec3(cos(forward_h), 0.0f, sin(forward_h));
-		}
-		if (key_a)
-		{
-			eye -= 0.05f * glm::vec3(-sin(forward_h), 0.0f, cos(forward_h));
-		}
-		if (key_d)
-		{
-			eye += 0.05f * glm::vec3(-sin(forward_h), 0.0f, cos(forward_h));
-		}
+		processEvent();
 		display();
 		SDL_GL_SwapWindow(window);
 	}
@@ -244,7 +132,7 @@ void display(void)
 	glClearBufferfv(GL_COLOR, 0, bg_color);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	glm::mat4 View = glm::lookAt(eye, eye + glm::vec3(cos(forward_h), forward_v, sin(forward_h)), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 View = glm::lookAt(glm::vec3(eye_x, eye_y, eye_z), glm::vec3(eye_x, eye_y, eye_z) + glm::vec3(cos(forward_h), forward_v, sin(forward_h)), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 Model = ModelT * ModelR * ModelS;
 
 	glm::mat4 clip_model = clip_view * View * Model;

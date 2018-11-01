@@ -1,5 +1,9 @@
 #include "EventProcessor.h"
 
+#include <math.h>
+
+#define PI 3.14159265358979323846264338327950288419716939937510582097
+
 static char key_pressed_bitmap[32];
 
 void processEvent()
@@ -32,6 +36,7 @@ void processEvent()
 			case SDL_TEXTINPUT:
 			case SDL_KEYMAPCHANGED:
 			{
+				processKeyboardEvent(e);
 				break;
 			}
 			case SDL_MOUSEMOTION:
@@ -39,6 +44,7 @@ void processEvent()
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEWHEEL:
 			{
+				processMouseEvent(e);
 				break;
 			}
 			case SDL_JOYAXISMOTION:
@@ -104,14 +110,71 @@ void processEvent()
 			}
 		}
 	}
+	if (ifKeyPressed(SDL_SCANCODE_W))
+	{
+		eye_x += 0.05 * cos(forward_h);
+		eye_z += 0.05 * sin(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_S))
+	{
+		eye_x -= 0.05 * cos(forward_h);
+		eye_z -= 0.05 * sin(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_A))
+	{
+		eye_x += 0.05 * sin(forward_h);
+		eye_z -= 0.05 * cos(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_D))
+	{
+		eye_x -= 0.05 * sin(forward_h);
+		eye_z += 0.05 * cos(forward_h);
+	}
 }
 
 static void processKeyboardEvent(SDL_Event e)
 {
+	switch (e.type)
+	{
+		case SDL_KEYDOWN:
+		{
+			pressKey(e.key.keysym.scancode);
+			break;
+		}
+		case SDL_KEYUP:
+		{
+			releaseKey(e.key.keysym.scancode);
+			break;
+		}
+		case SDL_TEXTEDITING:
+		case SDL_TEXTINPUT:
+		case SDL_KEYMAPCHANGED:
+		default:
+		{
+			break;
+		}
+	}
 }
 
 static void processMouseEvent(SDL_Event e)
 {
+	switch (e.type)
+	{
+		case SDL_MOUSEMOTION:
+		{
+			forward_v = fminf(forward_v - e.motion.yrel * 0.01f, PI / 2 - 0.000000001f);
+			forward_v = fmaxf(forward_v, -PI / 2 + 0.000000001f);
+			forward_h = fmodf(forward_h + e.motion.xrel * 0.01f, 2 * PI);
+			break;
+		}
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEWHEEL:
+		default:
+		{
+			break;
+		}
+	}
 }
 
 static void pressKey(SDL_Scancode key)
