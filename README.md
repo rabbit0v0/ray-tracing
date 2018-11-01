@@ -1,9 +1,10 @@
-Default request openGL version 4.3
+# openGL demo
+*Default request openGL version 4.3*
 
-Usage:
+*Usage*:
 	mkdir build
 	cd build && cmake .. && make && ./openGL_demo
 
-Clean:
+*Clean*:
 	cd build
 	rm -rf *
