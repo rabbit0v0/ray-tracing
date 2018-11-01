@@ -33,7 +33,6 @@ bool key_a = false;
 bool key_d = false;
 
 glm::vec3 eye = glm::vec3(0.0f, 0.0f, -1.5f);
-
 GLfloat forward_h = 0.0f;
 GLfloat forward_v = pi;
 
@@ -52,8 +51,6 @@ static void APIENTRY simple_print_callback(GLenum source, GLenum type, GLuint id
 GLuint VAOs[NumVAOs];
 GLuint Buffers[NumBuffers];
 
-const GLuint NumVertices = 6;
-
 void init(void);
 void display(void);
 
@@ -64,22 +61,21 @@ int main()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 	SDL_Window *window = SDL_CreateWindow("openGL demo",
-										  100, // x position
-										  100, // y position
-										  800, // wideth
-										  600, // height
-										  SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN_DESKTOP);
+										  0, // x position
+										  0, // y position
+										  1920, // wideth
+										  1080, // height
+										  SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	if (!window)
 	{
 		fprintf(stderr, "Could not create a window: %s\n", SDL_GetError());
 		return 1;
 	}
 
-	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
-
+	SDL_GL_CreateContext(window);
 	gladLoadGLLoader(SDL_GL_GetProcAddress);
 	printf("OpenGL Version %s loaded.\n", glGetString(GL_VERSION));
-//	assert(glClearColor != NULL);
+	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	init();
 	SDL_Event e;
@@ -97,18 +93,9 @@ int main()
 				}
 				case SDL_MOUSEMOTION:
 				{
-					if (mouse_check)
-					{
-						forward_v = std::fmin(forward_v - e.motion.yrel * 0.01f, pi / 2 - 0.00000001f);
-						forward_v = std::fmax(forward_v, -pi / 2 + 0.00000001f);
-						forward_h = fmod(forward_h + e.motion.xrel * 0.01f, 2 * pi);
-						mouse_check = false;
-//						SDL_WarpMouseGlobal(1920 / 2, 1080 / 2);
-					}
-					else
-					{
-						mouse_check = true;
-					}
+					forward_v = std::fmin(forward_v - e.motion.yrel * 0.01f, pi / 2 - 0.00000001f);
+					forward_v = std::fmax(forward_v, -pi / 2 + 0.00000001f);
+					forward_h = fmod(forward_h + e.motion.xrel * 0.01f, 2 * pi);
 					break;
 				}
 				case SDL_MOUSEWHEEL:
@@ -138,6 +125,13 @@ int main()
 						case SDL_SCANCODE_D:
 						{
 							key_d = true;
+							break;
+						}
+						case SDL_SCANCODE_ESCAPE:
+						{
+							SDL_DestroyWindow(window);
+							SDL_Quit();
+							return 0;
 							break;
 						}
 						default:
