@@ -1,8 +1,18 @@
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ShaderLoader.h"
+
+enum
+{
+	VERT,
+	TESC,
+	TESE,
+	GEOM,
+	FRAG,
+	COMP
+};
 
 GLuint shaders[6] = {0};
 GLuint program = 0;
@@ -20,7 +30,7 @@ void loadShader(const char *shader)
 	FILE *fp = fopen(fn, "r");
 	if (!fp)
 	{
-		perror("loadShader: cannot open file"); //TODO
+		perror("loadShader: cannot open file"); // TODO
 		return;
 	}
 	fseek(fp, 0, SEEK_END);

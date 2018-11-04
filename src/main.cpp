@@ -1,13 +1,13 @@
-#include "ShaderLoader.h"
 #include "EventProcessor.h"
+#include "ShaderLoader.h"
 #include "glad/glad.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
+#include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_query.hpp>
-#include <cmath>
 #include <utility>
 
 #define DEBUG 0
@@ -49,19 +49,13 @@ GLuint Buffers[NumBuffers];
 
 void init(void);
 void display(void);
-
 int main()
 {
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-	SDL_Window *window = SDL_CreateWindow("openGL demo",
-										  0,
-										  0,
-										  1920,
-										  1080,
-										  SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	SDL_Window *window = SDL_CreateWindow("openGL demo", 0, 0, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	SDL_GL_CreateContext(window);
@@ -79,7 +73,6 @@ int main()
 		SDL_GL_SwapWindow(window);
 	}
 }
-
 void init(void)
 {
 #if DEBUG
@@ -87,10 +80,8 @@ void init(void)
 	glDebugMessageCallback(simple_print_callback, NULL);
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
-
 	glGenBuffers(NumBuffers, Buffers);
 	glBindBuffer(GL_ARRAY_BUFFER, Buffers[ArrayBuffer]);
-
 	glGenVertexArrays(NumVAOs, VAOs);
 	glBindVertexArray(VAOs[Triangles]);
 	glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -100,7 +91,7 @@ void init(void)
 	loadShader("default.frag");
 	useProgram();
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
 
 	GLfloat z_last = -0.7;
 	for (int i = 0; i < 200; i++)
@@ -127,7 +118,9 @@ void display(void)
 	glClearBufferfv(GL_COLOR, 0, bg_color);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	glm::mat4 View = glm::lookAt(glm::vec3(eye_x, eye_y, eye_z), glm::vec3(eye_x, eye_y, eye_z) + glm::vec3(cos(forward_h), forward_v, sin(forward_h)), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 View = glm::lookAt(glm::vec3(eye_x, eye_y, eye_z),
+								 glm::vec3(eye_x, eye_y, eye_z) + glm::vec3(cos(forward_h), forward_v, sin(forward_h)),
+								 glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 Model = ModelT * ModelR * ModelS;
 
 	glm::mat4 clip_model = clip_view * View * Model;
@@ -135,14 +128,8 @@ void display(void)
 	glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(clip_model));
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 200 * 200 * 2);
 
-	GLfloat axis[6][3] = {
-		{-100.0f, 0.0f, 0.0f},
-		{100.0f, 0.0f, 0.0f},
-		{0.0f, -100.0f, 0.0f},
-		{0.0f, 100.0f, 0.0f},
-		{0.0f, 0.0f, -100.0f},
-		{0.0f, 0.0f, 100.0f}
-	};
+	GLfloat axis[6][3] = {{-100.0f, 0.0f, 0.0f}, {100.0f, 0.0f, 0.0f},  {0.0f, -100.0f, 0.0f},
+						  {0.0f, 100.0f, 0.0f},  {0.0f, 0.0f, -100.0f}, {0.0f, 0.0f, 100.0f}};
 	glBufferData(GL_ARRAY_BUFFER, sizeof(axis), axis, GL_STATIC_DRAW);
 	glDrawArrays(GL_LINES, 0, 6);
 }

@@ -8,13 +8,6 @@ extern "C" {
 
 #define MAX_FILENAME_LEN 256
 
-#define VERT 0
-#define TESC 1
-#define TESE 2
-#define GEOM 3
-#define FRAG 4
-#define COMP 5
-
 /*
  * const char *shader : shader's name, end with { .vert, .tesc, .tese, .geom, .frag, .comp }
  */
