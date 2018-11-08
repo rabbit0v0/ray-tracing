@@ -17,18 +17,23 @@ enum VAO_IDs
 	Triangles,
 	NumVAOs
 };
+
 enum Buffer_IDs
 {
 	ArrayBuffer,
 	NumBuffers
 };
+
 enum Attrib_IDs
 {
-	vPosition = 0
+	VertexPosition = 0,
+	VertexColor,
 };
 
+GLuint VAOs[NumVAOs];
+GLuint Buffers[NumBuffers];
+
 const GLfloat pi = 3.141591653589793238462643383279502f;
-GLfloat sphere[200][200][2][3];
 
 glm::mat4 ModelS = glm::mat4(1.0f);
 glm::mat4 ModelR = glm::mat4(1.0f);
@@ -43,9 +48,6 @@ static void APIENTRY simple_print_callback(GLenum source, GLenum type, GLuint id
 	printf("Debug message  '%s'\n", message);
 }
 #endif
-
-GLuint VAOs[NumVAOs];
-GLuint Buffers[NumBuffers];
 
 void init(void);
 void display(void);
@@ -80,19 +82,23 @@ void init(void)
 	glDebugMessageCallback(simple_print_callback, NULL);
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 #endif
+	glEnable(GL_DEPTH_TEST);
+
 	glGenBuffers(NumBuffers, Buffers);
-	glBindBuffer(GL_ARRAY_BUFFER, Buffers[ArrayBuffer]);
 	glGenVertexArrays(NumVAOs, VAOs);
+
+	glBindBuffer(GL_ARRAY_BUFFER, Buffers[ArrayBuffer]);
 	glBindVertexArray(VAOs[Triangles]);
-	glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(vPosition);
 
 	loadShader("default.vert");
 	loadShader("default.frag");
 	useProgram();
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+	const GLfloat axis[6][3] = {{-100.0f, 0.0f, 0.0f}, {100.0f, 0.0f, 0.0f},  {0.0f, -100.0f, 0.0f},
+								{0.0f, 100.0f, 0.0f},  {0.0f, 0.0f, -100.0f}, {0.0f, 0.0f, 100.0f}};
+	GLfloat sphere[200][200][2][3];
 	GLfloat z_last = -0.7;
 	for (int i = 0; i < 200; i++)
 	{
@@ -110,6 +116,18 @@ void init(void)
 		}
 		z_last = z;
 	}
+
+	GLfloat floor[4][3] = {
+		{-100.0f, -5.0f, -100.0f}, {-100.0f, -5.0f, 100.0f}, {100.0f, -5.0f, -100.0f}, {100.0f, -5.0f, 100.0f}};
+
+	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(VertexPosition);
+	glVertexAttrib4f(VertexColor, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(sphere) + sizeof(axis) + sizeof(floor), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(sphere), sphere);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sphere), sizeof(axis), axis);
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sphere) + sizeof(axis), sizeof(floor), floor);
 }
 
 void display(void)
@@ -122,14 +140,17 @@ void display(void)
 								 glm::vec3(eye_x, eye_y, eye_z) + glm::vec3(cos(forward_h), forward_v, sin(forward_h)),
 								 glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 Model = ModelT * ModelR * ModelS;
-
 	glm::mat4 clip_model = clip_view * View * Model;
-	glBufferData(GL_ARRAY_BUFFER, sizeof(sphere), sphere, GL_STATIC_DRAW);
-	glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(clip_model));
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 200 * 200 * 2);
 
-	GLfloat axis[6][3] = {{-100.0f, 0.0f, 0.0f}, {100.0f, 0.0f, 0.0f},  {0.0f, -100.0f, 0.0f},
-						  {0.0f, 100.0f, 0.0f},  {0.0f, 0.0f, -100.0f}, {0.0f, 0.0f, 100.0f}};
-	glBufferData(GL_ARRAY_BUFFER, sizeof(axis), axis, GL_STATIC_DRAW);
-	glDrawArrays(GL_LINES, 0, 6);
+	glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(clip_model));
+	glUniform3f(4, 0.3f, 0.3f, 0.3f);
+	glUniform3f(5, 0.0f, 0.5f, 0.5f);
+	glUniform3f(6, 1.0f, 1.0f, 1.0f);
+	glUniform3f(7, -1.0f, -1.0f, -1.0f);
+	glUniform1f(8, 20.0f);
+	glUniform1f(9, 0.5f);
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 200 * 200 * 2);
+	glDrawArrays(GL_LINES, 200 * 200 * 2, 6);
+	glDrawArrays(GL_TRIANGLE_STRIP, 200 * 200 * 2 + 6, 4);
 }

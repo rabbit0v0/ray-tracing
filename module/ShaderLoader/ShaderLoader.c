@@ -4,6 +4,8 @@
 
 #include "ShaderLoader.h"
 
+#define ShaderLoader_DEBUG 1
+
 enum
 {
 	VERT,
@@ -81,6 +83,20 @@ void loadShader(const char *shader)
 	const char *s = src;
 	glShaderSource(shaders[type], 1, &s, NULL);
 	glCompileShader(shaders[type]);
+#if ShaderLoader_DEBUG
+	GLint result;
+	glGetShaderiv(shaders[type], GL_COMPILE_STATUS, &result);
+	if (result != GL_TRUE)
+	{
+		GLsizei length;
+		glGetShaderiv(shaders[type], GL_INFO_LOG_LENGTH, &length);
+		GLchar *info_log = (GLchar *)malloc(length + 1);
+		glGetShaderInfoLog(shaders[type], length, NULL, info_log);
+		info_log[length] = '\0';
+		printf("SharderLoader: Compile err: %s (length %d)\n", info_log, length);
+		free(info_log);
+	}
+#endif
 	free(src);
 }
 
