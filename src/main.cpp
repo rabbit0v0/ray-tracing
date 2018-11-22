@@ -146,9 +146,10 @@ void display(void)
 	glUniform3f(4, 0.3f, 0.3f, 0.3f);
 	glUniform3f(5, 0.0f, 0.5f, 0.5f);
 	glUniform3f(6, 1.0f, 1.0f, 1.0f);
-	glUniform3f(7, -1.0f, -1.0f, -1.0f);
+	glUniform3f(7, cos(forward_h), forward_v, sin(forward_h));
 	glUniform1f(8, 20.0f);
 	glUniform1f(9, 0.5f);
+	glUniform3f(10, light_x, light_y, light_z);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 200 * 200 * 2);
 	glDrawArrays(GL_LINES, 200 * 200 * 2, 6);

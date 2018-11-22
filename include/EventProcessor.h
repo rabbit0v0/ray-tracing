@@ -14,6 +14,10 @@ float eye_z;
 float forward_v;
 float forward_h;
 
+float light_x;
+float light_y;
+float light_z;
+
 /*
  * The main processor
  */

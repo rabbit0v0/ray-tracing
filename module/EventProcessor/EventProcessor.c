@@ -143,6 +143,34 @@ void processEvent(SDL_Window *window)
 		eye_x -= move_unit * sin(forward_h);
 		eye_z += move_unit * cos(forward_h);
 	}
+	if (ifKeyPressed(SDL_SCANCODE_I))
+	{
+		light_x += move_unit * cos(forward_h);
+		light_z += move_unit * sin(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_K))
+	{
+		light_x -= move_unit * cos(forward_h);
+		light_z -= move_unit * sin(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_J))
+	{
+		light_x += move_unit * sin(forward_h);
+		light_z -= move_unit * cos(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_L))
+	{
+		light_x -= move_unit * sin(forward_h);
+		light_z += move_unit * cos(forward_h);
+	}
+	if (ifKeyPressed(SDL_SCANCODE_U))
+	{
+		light_y += move_unit;
+	}
+	if (ifKeyPressed(SDL_SCANCODE_O))
+	{
+		light_y -= move_unit;
+	}
 	if (ifKeyPressed(SDL_SCANCODE_ESCAPE))
 	{
 		SDL_DestroyWindow(window);
@@ -188,6 +216,9 @@ static void processMouseEvent(SDL_Event e)
 	}
 	case SDL_MOUSEBUTTONDOWN:
 	case SDL_MOUSEBUTTONUP:
+	{
+		break;
+	}
 	case SDL_MOUSEWHEEL:
 	{
 		eye_y += e.wheel.y * move_unit;
@@ -200,8 +231,17 @@ static void processMouseEvent(SDL_Event e)
 	}
 }
 
-static void pressKey(SDL_Scancode key) { key_pressed_bitmap[key / 8] |= 1 << (key % 8); }
+static void pressKey(SDL_Scancode key)
+{
+	key_pressed_bitmap[key / 8] |= 1 << (key % 8);
+}
 
-static void releaseKey(SDL_Scancode key) { key_pressed_bitmap[key / 8] &= ~(1 << (key % 8)); }
+static void releaseKey(SDL_Scancode key)
+{
+	key_pressed_bitmap[key / 8] &= ~(1 << (key % 8));
+}
 
-static int ifKeyPressed(SDL_Scancode key) { return key_pressed_bitmap[key / 8] & (1 << (key % 8)); }
+static int ifKeyPressed(SDL_Scancode key)
+{
+	return key_pressed_bitmap[key / 8] & (1 << (key % 8));
+}
