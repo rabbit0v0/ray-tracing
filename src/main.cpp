@@ -1,6 +1,8 @@
 #include "EventProcessor.h"
 #include "ShaderLoader.h"
 #include "glad/glad.h"
+#include "tiny_obj_loader.h"
+#include "MeshObj.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <cmath>
@@ -9,37 +11,28 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_query.hpp>
 #include <utility>
+#include <iostream>
 
 #define DEBUG 0
+#define PRINT_LINE(msg) printf("line: %d: %s\n", __LINE__, msg)
 
-enum VAO_IDs
+enum UniformLocation
 {
-	Triangles,
-	NumVAOs
+	clipmodel,
+	ambient,
+	light_color,
+	light_direction,
+	eye_direction,
+	shininess,
+	strength,
+	light_pos,
+	NumUniformLocation
 };
 
-enum Buffer_IDs
-{
-	ArrayBuffer,
-	NumBuffers
-};
+GLuint UniformLocations[NumUniformLocation];
 
-enum Attrib_IDs
-{
-	VertexPosition = 0,
-	VertexColor,
-};
-
-GLuint VAOs[NumVAOs];
-GLuint Buffers[NumBuffers];
-
-const GLfloat pi = 3.141591653589793238462643383279502f;
-
-glm::mat4 ModelS = glm::mat4(1.0f);
-glm::mat4 ModelR = glm::mat4(1.0f);
-glm::mat4 ModelT = glm::mat4(1.0f);
-
-glm::mat4 clip_view = glm::perspective(pi / 2, 4.0f / 3.0f, 0.01f, 100.0f);
+glm::mat4 clip_view = glm::perspective(1.570796327f, 4.0f / 3.0f, 0.01f, 100.0f);
+std::vector<MeshObj> meshes;
 
 #if DEBUG
 static void APIENTRY simple_print_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
@@ -54,7 +47,7 @@ void display(void);
 int main()
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
 	SDL_Window *window = SDL_CreateWindow("openGL demo", 0, 0, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -75,6 +68,7 @@ int main()
 		SDL_GL_SwapWindow(window);
 	}
 }
+
 void init(void)
 {
 #if DEBUG
@@ -84,50 +78,40 @@ void init(void)
 #endif
 	glEnable(GL_DEPTH_TEST);
 
-	glGenBuffers(NumBuffers, Buffers);
-	glGenVertexArrays(NumVAOs, VAOs);
-
-	glBindBuffer(GL_ARRAY_BUFFER, Buffers[ArrayBuffer]);
-	glBindVertexArray(VAOs[Triangles]);
-
 	loadShader("default.vert");
 	loadShader("default.frag");
-	useProgram();
-
+	GLuint program;
+	useProgram(&program);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	const GLfloat axis[6][3] = {{-100.0f, 0.0f, 0.0f}, {100.0f, 0.0f, 0.0f},  {0.0f, -100.0f, 0.0f},
-								{0.0f, 100.0f, 0.0f},  {0.0f, 0.0f, -100.0f}, {0.0f, 0.0f, 100.0f}};
-	GLfloat sphere[200][200][2][3];
-	GLfloat z_last = -0.7;
-	for (int i = 0; i < 200; i++)
+	
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string err;
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, "./res/scene.obj", "./res/");
+	if (!err.empty())
 	{
-		GLfloat z = 0.7 * sin(((i + 1.0f - 100.0f) / 200.0f) * pi);
-		for (int j = 0; j < 200; j++)
-		{
-			GLfloat x = 0.7 * cos((j / 100.0f) * pi);
-			GLfloat y = 0.7 * sin((j / 100.0f) * pi);
-			sphere[i][j][0][0] = x * cos(((i - 100.0f) / 200.0f) * pi);
-			sphere[i][j][0][2] = y * cos(((i - 100.0f) / 200.0f) * pi);
-			sphere[i][j][0][1] = z_last;
-			sphere[i][j][1][0] = x * cos(((i + 1.0f - 100.0f) / 200.0f) * pi);
-			sphere[i][j][1][2] = y * cos(((i + 1.0f - 100.0f) / 200.0f) * pi);
-			sphere[i][j][1][1] = z;
-		}
-		z_last = z;
+		std::cerr << err << std::endl;
 	}
+	if (!ret)
+	{
+		exit(1);
+	}
+	MeshObj test_obj;
+	meshCreate(&attrib, &shapes, &materials, &test_obj);
+	meshes.push_back(test_obj);
 
-	GLfloat floor[4][3] = {
-		{-100.0f, -5.0f, -100.0f}, {-100.0f, -5.0f, 100.0f}, {100.0f, -5.0f, -100.0f}, {100.0f, -5.0f, 100.0f}};
 
-	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glEnableVertexAttribArray(VertexPosition);
-	glVertexAttrib4f(VertexColor, 1.0f, 1.0f, 1.0f, 1.0f);
+	UniformLocations[clipmodel] = glGetUniformLocation(program, "clip_model");
+	UniformLocations[ambient] = glGetUniformLocation(program, "ambient");
+	UniformLocations[light_color] = glGetUniformLocation(program, "light_color");
+	UniformLocations[light_direction] = glGetUniformLocation(program, "light_direction");
+	UniformLocations[eye_direction] = glGetUniformLocation(program, "eye_direction");
+	UniformLocations[shininess] = glGetUniformLocation(program, "shininess");
+	UniformLocations[strength] = glGetUniformLocation(program, "strength");
+	UniformLocations[light_pos] = glGetUniformLocation(program, "light_pos");
+	glDeleteProgram(program);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(sphere) + sizeof(axis) + sizeof(floor), NULL, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(sphere), sphere);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sphere), sizeof(axis), axis);
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(sphere) + sizeof(axis), sizeof(floor), floor);
 }
 
 void display(void)
@@ -139,19 +123,17 @@ void display(void)
 	glm::mat4 View = glm::lookAt(glm::vec3(eye_x, eye_y, eye_z),
 								 glm::vec3(eye_x, eye_y, eye_z) + glm::vec3(cos(forward_h), forward_v, sin(forward_h)),
 								 glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 Model = ModelT * ModelR * ModelS;
-	glm::mat4 clip_model = clip_view * View * Model;
+	glm::mat4 clip_model = clip_view * View;
 
-	glUniformMatrix4fv(0, 1, GL_FALSE, glm::value_ptr(clip_model));
-	glUniform3f(4, 0.3f, 0.3f, 0.3f);
-	glUniform3f(5, 0.0f, 0.5f, 0.5f);
-	glUniform3f(6, 1.0f, 1.0f, 1.0f);
-	glUniform3f(7, cos(forward_h), forward_v, sin(forward_h));
-	glUniform1f(8, 20.0f);
-	glUniform1f(9, 0.5f);
-	glUniform3f(10, light_x, light_y, light_z);
+	glUniformMatrix4fv(UniformLocations[clipmodel], 1, GL_FALSE, glm::value_ptr(clip_model));
 
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 200 * 200 * 2);
-	glDrawArrays(GL_LINES, 200 * 200 * 2, 6);
-	glDrawArrays(GL_TRIANGLE_STRIP, 200 * 200 * 2 + 6, 4);
+	glUniform3f(UniformLocations[ambient], 0.3f, 0.3f, 0.3f);
+	glUniform3f(UniformLocations[light_direction], 0.0f, 0.5f, 0.5f);
+	glUniform3f(UniformLocations[light_color], 0.0f, 0.5f, 0.5f);
+	glUniform3f(UniformLocations[eye_direction], cos(forward_h), forward_v, sin(forward_h));
+	glUniform1f(UniformLocations[shininess], 20.0f);
+	glUniform1f(UniformLocations[strength], 0.5f);
+	glUniform3f(UniformLocations[light_pos], light_x, light_y, light_z);
+
+	meshDrawSelf(meshes[0]);
 }

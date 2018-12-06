@@ -9,6 +9,7 @@ add_subdirectory (${PROJECT_SOURCE_DIR}/module)
 set (EXTRA_LIBS ${EXTRA_LIBS} ShaderLoader
 							  EventProcessor
 							  tiny_obj_loader
+							  MeshObj
                               glad
 							  SDL2
                               dl

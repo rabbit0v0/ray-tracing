@@ -1,22 +1,22 @@
-#version 430 core
+#version 330 core
 in vec4 vs_v_color;
-in vec3 normal;
+in vec3 vs_v_normal;
 in vec4 vs_v_position;
 layout (location = 0) out vec4 color;
-layout (location = 4) uniform vec3 ambient;
-layout (location = 5) uniform vec3 light_color;
-layout (location = 6) uniform vec3 light_direction;
-layout (location = 7) uniform vec3 eye_direction;
-layout (location = 8) uniform float shininess;
-layout (location = 9) uniform float strength;
-layout (location = 10) uniform vec3 light_pos;
+uniform vec3 ambient;
+uniform vec3 light_color;
+uniform vec3 light_direction;
+uniform vec3 eye_direction;
+uniform float shininess;
+uniform float strength;
+uniform vec3 light_pos;
 void main()
 {
 	vec3 direction = light_pos - vs_v_position.xyz;
 	float len = length(direction);
 	vec3 half_vector = normalize(direction + eye_direction);
-	float diffuse = max(0.0f, dot(normal, normalize(direction)));
-	float specular = max(0.0f, dot(normal, half_vector));
+	float diffuse = max(0.0f, dot(vs_v_normal, normalize(direction)));
+	float specular = max(0.0f, dot(vs_v_normal, half_vector));
 
 	if (diffuse == 0.0)
 	{

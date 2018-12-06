@@ -13,7 +13,7 @@ extern "C" {
  */
 void loadShader(const char *shader);
 
-void useProgram();
+void useProgram(GLuint *program);
 
 #ifdef __cplusplus
 }

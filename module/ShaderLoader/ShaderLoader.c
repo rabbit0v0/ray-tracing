@@ -17,7 +17,6 @@ enum
 };
 
 GLuint shaders[6] = {0};
-GLuint program = 0;
 
 void loadShader(const char *shader)
 {
@@ -93,26 +92,26 @@ void loadShader(const char *shader)
 		GLchar *info_log = (GLchar *)malloc(length + 1);
 		glGetShaderInfoLog(shaders[type], length, NULL, info_log);
 		info_log[length] = '\0';
-		printf("SharderLoader: Compile err: %s (length %d)\n", info_log, length);
+		printf("ShaderLoader: %s: Compile err: %s (length %d)\n", shader, info_log, length);
 		free(info_log);
 	}
 #endif
 	free(src);
 }
 
-void useProgram()
+void useProgram(GLuint *program)
 {
-	program = glCreateProgram();
+	*program = glCreateProgram();
 	int i;
 	for (i = 0; i < 6; i++)
 	{
 		if (glIsShader(shaders[i]))
 		{
-			glAttachShader(program, shaders[i]);
+			glAttachShader(*program, shaders[i]);
 			glDeleteShader(shaders[i]);
 		}
 	}
-	glLinkProgram(program);
-	glUseProgram(program);
-	glDeleteProgram(program);
+	glLinkProgram(*program);
+	glUseProgram(*program);
+//	glDeleteProgram(program);
 }
