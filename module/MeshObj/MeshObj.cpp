@@ -9,8 +9,18 @@ enum Attrib_IDs
 	VertexColor,
 };
 
+enum uniform_IDs
+{
+	ambient,
+	diffuse,
+	specular,
+	shininess,
+	strength,
+	Num_uniform_IDs
+};
+
 int meshCreate(tinyobj::attrib_t *attrib, std::vector<tinyobj::shape_t> *shapes,
-			   std::vector<tinyobj::material_t> *materials, MeshObj *mesh_obj)
+			   std::vector<tinyobj::material_t> *materials, MeshObj *mesh_obj, GLuint program)
 {
 	glGenBuffers(1, &(mesh_obj->buffer));
 	glGenVertexArrays(1, &(mesh_obj->vao));
@@ -79,11 +89,37 @@ int meshCreate(tinyobj::attrib_t *attrib, std::vector<tinyobj::shape_t> *shapes,
 						  (const GLvoid *)((long)mesh_obj->normal_offset * sizeof(tinyobj::real_t)));
 	glEnableVertexAttribArray(VertexNormal);
 	glVertexAttrib4f(VertexColor, 1.0f, 1.0f, 1.0f, 1.0f);
+
+	mesh_obj->uniform_index = glGetUniformBlockIndex(program, "mtl");
+	GLuint uniform_indices[Num_uniform_IDs];
+	GLint uniform_offsets[Num_uniform_IDs];
+	GLint uniform_sizes[Num_uniform_IDs];
+	GLint uniform_types[Num_uniform_IDs];
+	glGenBuffers(1, &(mesh_obj->ubo));
+	const char *uniform_names[Num_uniform_IDs] = {"ambient", "diffuse", "specular", "shininess", "strength"};
+	GLint uniform_size;
+	glGetActiveUniformBlockiv(program, mesh_obj->uniform_index, GL_UNIFORM_BLOCK_DATA_SIZE, &uniform_size);
+	void  *buffer = malloc(uniform_size);
+	glGetUniformIndices(program, Num_uniform_IDs, uniform_names, uniform_indices);
+	glGetActiveUniformsiv(program, Num_uniform_IDs, uniform_indices, GL_UNIFORM_OFFSET,
+						  uniform_offsets);
+	glGetActiveUniformsiv(program, Num_uniform_IDs, uniform_indices, GL_UNIFORM_SIZE,
+						  uniform_sizes);
+	glGetActiveUniformsiv(program, Num_uniform_IDs, uniform_indices, GL_UNIFORM_TYPE,
+						  uniform_types);
+	glBindBuffer(GL_UNIFORM_BUFFER, mesh_obj->ubo);
+
+	GLfloat test[] = {0.3f, 0.3f, 0.7f, 0.5f, 0.5f, 1.5f, 00.0f};
+
+	glBufferData(GL_UNIFORM_BUFFER, uniform_size, test, GL_STATIC_DRAW);
 	return 0;
 }
 
 void meshDrawSelf(MeshObj &mesh_obj)
 {
+	glBindBuffer(GL_UNIFORM_BUFFER, mesh_obj.ubo);
+	glBindBufferBase(GL_UNIFORM_BUFFER, mesh_obj.uniform_index, mesh_obj.ubo);
+
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_obj.buffer);
 	glBindVertexArray(mesh_obj.vao);
 	glDrawArrays(GL_TRIANGLES, 0, mesh_obj.normal_offset / 3);
