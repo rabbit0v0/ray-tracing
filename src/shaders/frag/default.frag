@@ -3,13 +3,16 @@ in vec4 vs_v_color;
 in vec3 vs_v_normal;
 in vec4 vs_v_position;
 layout (location = 0) out vec4 color;
-uniform vec3 ambient;
-uniform vec3 light_color;
-uniform vec3 light_direction;
-uniform vec3 eye_direction;
-uniform float shininess;
-uniform float strength;
-uniform vec3 light_pos;
+uniform mtl
+{
+	vec3 ambient;
+	vec3 light_color;
+	vec3 light_direction;
+	vec3 eye_direction;
+	vec3 light_pos;
+	float shininess;
+	float strength;
+};
 void main()
 {
 	vec3 direction = light_pos - vs_v_position.xyz;

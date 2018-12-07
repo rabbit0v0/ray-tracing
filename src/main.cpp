@@ -18,7 +18,6 @@
 
 enum UniformLocation
 {
-	clipmodel,
 	ambient,
 	light_color,
 	light_direction,
@@ -29,7 +28,16 @@ enum UniformLocation
 	NumUniformLocation
 };
 
-GLuint UniformLocations[NumUniformLocation];
+GLuint uniform_block_mtl_indices[NumUniformLocation];
+GLint uniform_block_mtl_size[NumUniformLocation];
+GLint uniform_block_mtl_offset[NumUniformLocation];
+GLint uniform_block_mtl_type[NumUniformLocation];
+GLint uniform_size;
+GLuint ubo;
+GLvoid *uniform_mtl_buffer;
+GLuint uniform_index;
+
+GLuint clip_model_index;
 
 glm::mat4 clip_view = glm::perspective(1.570796327f, 4.0f / 3.0f, 0.01f, 100.0f);
 std::vector<MeshObj> meshes;
@@ -83,7 +91,7 @@ void init(void)
 	GLuint program;
 	useProgram(&program);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	
+
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
@@ -101,17 +109,27 @@ void init(void)
 	meshCreate(&attrib, &shapes, &materials, &test_obj);
 	meshes.push_back(test_obj);
 
+	uniform_index = glGetUniformBlockIndex(program, "mtl");
 
-	UniformLocations[clipmodel] = glGetUniformLocation(program, "clip_model");
-	UniformLocations[ambient] = glGetUniformLocation(program, "ambient");
-	UniformLocations[light_color] = glGetUniformLocation(program, "light_color");
-	UniformLocations[light_direction] = glGetUniformLocation(program, "light_direction");
-	UniformLocations[eye_direction] = glGetUniformLocation(program, "eye_direction");
-	UniformLocations[shininess] = glGetUniformLocation(program, "shininess");
-	UniformLocations[strength] = glGetUniformLocation(program, "strength");
-	UniformLocations[light_pos] = glGetUniformLocation(program, "light_pos");
+	const char *uniform_names[NumUniformLocation] = {"ambient",   "light_color", "light_direction", "eye_direction",
+													 "shininess", "strength",	"light_pos"};
+
+	glGetActiveUniformBlockiv(program, uniform_index, GL_UNIFORM_BLOCK_DATA_SIZE, &uniform_size);
+	uniform_mtl_buffer = malloc(uniform_size);
+	glGetUniformIndices(program, NumUniformLocation, uniform_names, uniform_block_mtl_indices);
+	glGetActiveUniformsiv(program, NumUniformLocation, uniform_block_mtl_indices, GL_UNIFORM_OFFSET,
+						  uniform_block_mtl_offset);
+	glGetActiveUniformsiv(program, NumUniformLocation, uniform_block_mtl_indices, GL_UNIFORM_SIZE,
+						  uniform_block_mtl_size);
+	glGetActiveUniformsiv(program, NumUniformLocation, uniform_block_mtl_indices, GL_UNIFORM_TYPE,
+						  uniform_block_mtl_type);
+	glGenBuffers(1, &ubo);
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+	glBufferData(GL_UNIFORM_BUFFER, uniform_size, NULL, GL_STATIC_DRAW);
+
+	clip_model_index = glGetUniformLocation(program, "clip_model");
+
 	glDeleteProgram(program);
-
 }
 
 void display(void)
@@ -124,16 +142,27 @@ void display(void)
 								 glm::vec3(eye_x, eye_y, eye_z) + glm::vec3(cos(forward_h), forward_v, sin(forward_h)),
 								 glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 clip_model = clip_view * View;
+	glUniformMatrix4fv(clip_model_index, 1, GL_FALSE, glm::value_ptr(clip_model));
 
-	glUniformMatrix4fv(UniformLocations[clipmodel], 1, GL_FALSE, glm::value_ptr(clip_model));
+	glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+	GLfloat data_ambient[] = {0.3f, 0.3f, 0.3f};
+	GLfloat data_light_direction[] = {0.0f, 0.0f, 0.0f};
+	GLfloat data_light_color[] = {1.0f, 0.0f, 0.0f};
+	GLfloat data_eye_direction[] = {cos(forward_h), forward_v, sin(forward_h)};
+	GLfloat data_shininess = 20.0f;
+	GLfloat data_strength = 0.5f;
+	GLfloat data_light_pos[] = {light_x, light_y, light_z};
 
-	glUniform3f(UniformLocations[ambient], 0.3f, 0.3f, 0.3f);
-	glUniform3f(UniformLocations[light_direction], 0.0f, 0.5f, 0.5f);
-	glUniform3f(UniformLocations[light_color], 0.0f, 0.5f, 0.5f);
-	glUniform3f(UniformLocations[eye_direction], cos(forward_h), forward_v, sin(forward_h));
-	glUniform1f(UniformLocations[shininess], 20.0f);
-	glUniform1f(UniformLocations[strength], 0.5f);
-	glUniform3f(UniformLocations[light_pos], light_x, light_y, light_z);
+	memcpy((void *)((long)uniform_mtl_buffer + uniform_block_mtl_offset[ambient]), &data_ambient, 12);
+	memcpy((void *)((long)uniform_mtl_buffer + uniform_block_mtl_offset[light_direction]), &data_light_direction, 12);
+	memcpy((void *)((long)uniform_mtl_buffer + uniform_block_mtl_offset[light_color]), &data_light_color, 12);
+	memcpy((void *)((long)uniform_mtl_buffer + uniform_block_mtl_offset[eye_direction]), &data_eye_direction, 12);
+	memcpy((void *)((long)uniform_mtl_buffer + uniform_block_mtl_offset[shininess]), &data_shininess, 4);
+	memcpy((void *)((long)uniform_mtl_buffer + uniform_block_mtl_offset[strength]), &data_strength, 4);
+	memcpy((void *)((long)uniform_mtl_buffer + uniform_block_mtl_offset[light_pos]), &data_light_pos, 12);
+
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, uniform_size, uniform_mtl_buffer);
+	glBindBufferBase(GL_UNIFORM_BUFFER, uniform_index, ubo);
 
 	meshDrawSelf(meshes[0]);
 }
