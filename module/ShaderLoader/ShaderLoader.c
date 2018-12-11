@@ -6,20 +6,10 @@
 
 #define ShaderLoader_DEBUG 1
 
-enum
+ShaderObj loadShader(const char *shader)
 {
-	VERT,
-	TESC,
-	TESE,
-	GEOM,
-	FRAG,
-	COMP
-};
-
-GLuint shaders[6] = {0};
-
-void loadShader(const char *shader)
-{
+	ShaderObj ret;
+	ret.type = ERR;
 	char shader_type[5];
 	strncpy(shader_type, shader + strlen(shader) - 4, 5);
 
@@ -32,7 +22,7 @@ void loadShader(const char *shader)
 	if (!fp)
 	{
 		perror("loadShader: cannot open file"); // TODO
-		return;
+		return ret;
 	}
 	fseek(fp, 0, SEEK_END);
 	long file_len = ftell(fp);
@@ -42,76 +32,80 @@ void loadShader(const char *shader)
 	src[file_len] = '\0';
 	fclose(fp);
 
-	int type;
-
 	if (!strncmp(shader_type, "vert", 4))
 	{
-		shaders[VERT] = glCreateShader(GL_VERTEX_SHADER);
-		type = VERT;
+		ret.type = VERT;
+		ret.shader = glCreateShader(GL_VERTEX_SHADER);
 	}
 	else if (!strncmp(shader_type, "tesc", 4))
 	{
-		shaders[TESC] = glCreateShader(GL_TESS_CONTROL_SHADER);
-		type = TESC;
+		ret.type = TESC;
+		ret.shader = glCreateShader(GL_TESS_CONTROL_SHADER);
 	}
 	else if (!strncmp(shader_type, "tese", 4))
 	{
-		shaders[TESE] = glCreateShader(GL_TESS_EVALUATION_SHADER);
-		type = TESE;
+		ret.type = TESE;
+		ret.shader = glCreateShader(GL_TESS_EVALUATION_SHADER);
 	}
 	else if (!strncmp(shader_type, "geom", 4))
 	{
-		shaders[GEOM] = glCreateShader(GL_GEOMETRY_SHADER);
-		type = GEOM;
+		ret.type = GEOM;
+		ret.shader = glCreateShader(GL_GEOMETRY_SHADER);
 	}
 	else if (!strncmp(shader_type, "frag", 4))
 	{
-		shaders[FRAG] = glCreateShader(GL_FRAGMENT_SHADER);
-		type = FRAG;
+		ret.type = FRAG;
+		ret.shader = glCreateShader(GL_FRAGMENT_SHADER);
 	}
 	else if (!strncmp(shader_type, "comp", 4))
 	{
-		shaders[COMP] = glCreateShader(GL_COMPUTE_SHADER);
-		type = COMP;
+		ret.type = COMP;
+		ret.shader = glCreateShader(GL_COMPUTE_SHADER);
 	}
 	else
 	{
 		free(src);
-		return;
+		fprintf(stderr, "fail to load shader: filename extension unmatched\n");
+		return ret;
 	}
 	const char *s = src;
-	glShaderSource(shaders[type], 1, &s, NULL);
-	glCompileShader(shaders[type]);
+	glShaderSource(ret.shader, 1, &s, NULL);
+	glCompileShader(ret.shader);
 #if ShaderLoader_DEBUG
 	GLint result;
-	glGetShaderiv(shaders[type], GL_COMPILE_STATUS, &result);
+	glGetShaderiv(ret.shader, GL_COMPILE_STATUS, &result);
 	if (result != GL_TRUE)
 	{
 		GLsizei length;
-		glGetShaderiv(shaders[type], GL_INFO_LOG_LENGTH, &length);
+		glGetShaderiv(ret.shader, GL_INFO_LOG_LENGTH, &length);
 		GLchar *info_log = (GLchar *)malloc(length + 1);
-		glGetShaderInfoLog(shaders[type], length, NULL, info_log);
+		glGetShaderInfoLog(ret.shader, length, NULL, info_log);
 		info_log[length] = '\0';
 		printf("ShaderLoader: %s: Compile err: %s (length %d)\n", shader, info_log, length);
 		free(info_log);
+		ret.type = ERR;
 	}
 #endif
 	free(src);
+	return ret;
 }
 
-void useProgram(GLuint *program)
+void attachProgram(GLuint program, ShaderObj shader_obj)
 {
-	*program = glCreateProgram();
-	int i;
-	for (i = 0; i < 6; i++)
+	if (glIsShader(shader_obj.shader))
 	{
-		if (glIsShader(shaders[i]))
-		{
-			glAttachShader(*program, shaders[i]);
-			glDeleteShader(shaders[i]);
-		}
+		glAttachShader(program, shader_obj.shader);
+		glDeleteShader(shader_obj.shader);
 	}
-	glLinkProgram(*program);
-	glUseProgram(*program);
-//	glDeleteProgram(program);
+	else
+	{
+		fprintf(stderr, "attachProgram: shader_obj is not valid\n");
+	}
+}
+
+void useProgram(GLuint program)
+{
+	glLinkProgram(program);
+	glUseProgram(program);
+	glDeleteProgram(program);
 }

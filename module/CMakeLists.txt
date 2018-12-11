@@ -1,3 +1,5 @@
-add_library (ShaderLoader ./ShaderLoader/ShaderLoader.c)
-add_library (EventProcessor ./EventProcessor/EventProcessor.c)
-add_library (MeshObj ./MeshObj/MeshObj.cpp)
+add_library (module ./ShaderLoader/ShaderLoader.c
+                    ./ShaderProgram/ShaderProgram.cpp
+                    ./EventProcessor/EventProcessor.c
+                    ./MeshObj/MeshObj.cpp
+					./tiny_obj_loader.cc)

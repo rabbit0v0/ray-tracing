@@ -1,20 +1,18 @@
 #ifndef __MeshObj_h_
 #define __MeshObj_h_
 #include "glad/glad.h"
-#include "tiny_obj_loader.h"
+#include "ShaderProgram.h"
 
 typedef struct MeshObj_
 {
-	GLuint buffer;
+	ShaderProgram *shader_program;
 	GLuint vao;
-	GLuint ubo;
-	GLuint uniform_index;
+	GLuint buffer;
 	GLuint normal_offset;
 	GLuint texcoord_offset;
 } MeshObj;
 
-int meshCreate(tinyobj::attrib_t *attrib, std::vector<tinyobj::shape_t> *shapes,
-			   std::vector<tinyobj::material_t> *materials, MeshObj *mesh_obj, GLuint program);
+MeshObj meshCreate(ShaderProgram *shader_program, const char *obj_name, const char *mtl_dir);
 
 void meshDrawSelf(MeshObj &mesh_obj);
 

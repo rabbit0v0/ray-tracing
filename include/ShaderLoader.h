@@ -8,12 +8,29 @@ extern "C" {
 
 #define MAX_FILENAME_LEN 256
 
+enum ShaderType
+{
+	VERT = 0,
+	TESC,
+	TESE,
+	GEOM,
+	FRAG,
+	COMP,
+	ERR
+};
+
+typedef struct ShaderObj_
+{
+	enum ShaderType type;
+	GLuint shader;
+} ShaderObj;
+
 /*
  * const char *shader : shader's name, end with { .vert, .tesc, .tese, .geom, .frag, .comp }
  */
-void loadShader(const char *shader);
-
-void useProgram(GLuint *program);
+ShaderObj loadShader(const char *shader);
+void attachProgram(GLuint program, ShaderObj shader_obj);
+void useProgram(GLuint program);
 
 #ifdef __cplusplus
 }

@@ -6,10 +6,7 @@ include_directories (${PROJECT_SOURCE_DIR}/include)
 add_subdirectory (${PROJECT_SOURCE_DIR}/lib)
 add_subdirectory (${PROJECT_SOURCE_DIR}/module)
 
-set (EXTRA_LIBS ${EXTRA_LIBS} ShaderLoader
-							  EventProcessor
-							  tiny_obj_loader
-							  MeshObj
+set (EXTRA_LIBS ${EXTRA_LIBS} module
                               glad
 							  SDL2
                               dl
