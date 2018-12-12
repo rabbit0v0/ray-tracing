@@ -27,14 +27,14 @@ int main()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-	SDL_Window *window = SDL_CreateWindow("openGL demo", 0, 0, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-	SDL_SetRelativeMouseMode(SDL_TRUE);
+	SDL_Window *window = SDL_CreateWindow("openGL demo", 0, 0, 256, 256, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+	// SDL_SetRelativeMouseMode(SDL_TRUE);
 	SDL_GL_CreateContext(window);
 	gladLoadGLLoader(SDL_GL_GetProcAddress);
 	printf("OpenGL Version %s loaded.\n", glGetString(GL_VERSION));
 	ShaderProgram shader_program;
 	init(&shader_program);
-	EventData event_data;
+	EventData event_data = {0};
 	while (true)
 	{
 		processEvent(window, &event_data);
@@ -55,7 +55,7 @@ void init(ShaderProgram *shader_program)
 	useProgram(program);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	createShaderProgram(program, shader_program);
-	MeshObj mesh_obj = meshCreate(shader_program, "./res/monkey.obj", "./res/");
+	MeshObj mesh_obj = meshCreate(shader_program, "./res/scene.obj", "./res/");
 	meshes.push_back(mesh_obj);
 }
 
