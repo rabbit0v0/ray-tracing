@@ -10,6 +10,6 @@ void main()
 {
 	gl_Position = clip_model * v;
 	vert_v = gl_Position;
-	vert_vn = vn;
+	vert_vn = normalize(vn);
 	vert_vt = vt;
 }

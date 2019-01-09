@@ -7,7 +7,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-
 enum Attrib_IDs
 {
 	VertexPosition = 0,
@@ -41,18 +40,21 @@ MeshObj meshCreate(ShaderProgram *shader_program, const char *obj_name, const ch
 	glGenTextures(1, &(mesh_obj.texture_obj));
 	glBindTexture(GL_TEXTURE_2D, mesh_obj.texture_obj);
 
-    int x, y, n;
-    unsigned char *data = stbi_load("../res/test.jpg", &x, &y, &n, 0);
+	int x, y, n;
+	unsigned char *data = stbi_load("../res/test.jpg", &x, &y, &n, 0);
 	assert(data);
 	assert(n == 3);
 
-	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, x - 1, y - 1);
+	float texdata[] = {1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+							   1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, 2, 2);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, x, y, GL_RGB, GL_FLOAT, (void *)data);
-    stbi_image_free(data);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 2, 2, GL_RGB, GL_FLOAT, (void *)texdata);
+	stbi_image_free(data);
 
 	glGenVertexArrays(1, &(mesh_obj.vao));
 	glBindVertexArray(mesh_obj.vao);
@@ -93,14 +95,13 @@ MeshObj meshCreate(ShaderProgram *shader_program, const char *obj_name, const ch
 				temp_n_buffer[n_offset + 2] = nz;
 				n_offset += 3;
 
-				tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
-				tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
+//				tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
+//				tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
 
-				temp_t_buffer[t_offset] = te % (x * y) / y % x;
-				temp_t_buffer[t_offset + 1] = te % (x * y) % y;
+				temp_t_buffer[t_offset] = te % 4 / 2;
+				temp_t_buffer[t_offset + 1] = te % 4 % 2;
 				te++;
 				t_offset += 2;
-
 			}
 			index_offset += fv;
 		}
@@ -119,14 +120,11 @@ MeshObj meshCreate(ShaderProgram *shader_program, const char *obj_name, const ch
 	glVertexAttribPointer(VertexTexcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(VertexTexcoord);
 
-
 	free(temp_v_buffer);
 	free(temp_n_buffer);
 	free(temp_t_buffer);
 
-
 	mesh_obj.v_num = v_offset / 3u;
-
 
 	GLfloat ambient[] = {0.1f, 0.2f, 0.1f};
 	GLfloat diffuse = 0.5f;
