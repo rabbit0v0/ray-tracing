@@ -13,9 +13,7 @@ ShaderObj loadShader(const char *shader)
 	char shader_type[5];
 	strncpy(shader_type, shader + strlen(shader) - 4, 5);
 
-	char fn[MAX_FILENAME_LEN] = "./shaders/";
-	strcat(fn, shader_type);
-	strcat(fn, "/");
+	char fn[MAX_FILENAME_LEN] = "../shaders/";
 	strcat(fn, shader);
 
 	FILE *fp = fopen(fn, "r");

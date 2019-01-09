@@ -18,6 +18,8 @@ typedef struct EventData_
 	float light_x;
 	float light_y;
 	float light_z;
+	int alarm;
+	int drone_state;
 } EventData;
 
 /*

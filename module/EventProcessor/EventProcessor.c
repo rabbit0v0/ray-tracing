@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-#define PI 3.14159265358979323846264338327950288419716939937510582097
+#define PI 3.14159265358979323846264338327950288419716939937510582097f
 
 static char key_pressed_bitmap[32];
 static float move_unit = 0.05;
@@ -45,7 +45,11 @@ void updateEventData(SDL_Window *window, EventData *event_data)
 {
 	if (ifKeyPressed(SDL_SCANCODE_LSHIFT))
 	{
-		move_unit = 0.0005;
+		move_unit = 0.005;
+	}
+	else if (ifKeyPressed(SDL_SCANCODE_LCTRL))
+	{
+		move_unit = 1;
 	}
 	else
 	{
@@ -99,6 +103,22 @@ void updateEventData(SDL_Window *window, EventData *event_data)
 	{
 		event_data->light_y -= move_unit;
 	}
+	if (ifKeyPressed(SDL_SCANCODE_R))
+	{
+		event_data->alarm = !event_data->alarm;
+	}
+	if (ifKeyPressed(SDL_SCANCODE_1))
+	{
+		event_data->drone_state = 0;
+	}
+	if (ifKeyPressed(SDL_SCANCODE_2))
+	{
+		event_data->drone_state = 1;
+	}
+	if (ifKeyPressed(SDL_SCANCODE_3))
+	{
+		event_data->drone_state = 2;
+	}
 	if (ifKeyPressed(SDL_SCANCODE_ESCAPE))
 	{
 		SDL_DestroyWindow(window);
@@ -135,8 +155,9 @@ static void processMouseEvent(SDL_Event e, EventData *event_data)
 	{
 	case SDL_MOUSEMOTION:
 	{
-		event_data->forward_v = fminf(event_data->forward_v - e.motion.yrel * 0.01f, PI / 2 - 0.000000001f);
-		event_data->forward_v = fmaxf(event_data->forward_v, -PI / 2 + 0.000000001f);
+		static float epsilon = 0.001f;
+		event_data->forward_v = fminf(event_data->forward_v - e.motion.yrel * 0.01f, PI / 2 - epsilon);
+		event_data->forward_v = fmaxf(event_data->forward_v, -PI / 2 + epsilon);
 		event_data->forward_h = fmodf(event_data->forward_h + e.motion.xrel * 0.01f, 2 * PI);
 		break;
 	}

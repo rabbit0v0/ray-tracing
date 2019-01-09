@@ -1,4 +1,5 @@
 #include "EventProcessor.h"
+#include "drone_state.h"
 #include "ShaderLoader.h"
 #include "glad/glad.h"
 #include "ShaderProgram.h"
@@ -18,6 +19,7 @@
 #define PRINT_LINE(msg) printf("line: %d: %s\n", __LINE__, msg)
 
 std::vector<MeshObj> meshes;
+drone drone_entity = createDrone();
 
 void init(ShaderProgram *shader_program);
 void display(EventData event_data, ShaderProgram *shader_program);
@@ -55,7 +57,7 @@ void init(ShaderProgram *shader_program)
 	useProgram(program);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	createShaderProgram(program, shader_program);
-	MeshObj mesh_obj = meshCreate(shader_program, "./res/scene.obj", "./res/");
+	MeshObj mesh_obj = meshCreate(shader_program, "../res/scene.obj", "../res/");
 	meshes.push_back(mesh_obj);
 }
 
@@ -68,9 +70,9 @@ void display(EventData event_data, ShaderProgram *shader_program)
 	glm::mat4 View =
 		glm::lookAt(glm::vec3(event_data.eye_x, event_data.eye_y, event_data.eye_z),
 					glm::vec3(event_data.eye_x, event_data.eye_y, event_data.eye_z) +
-						glm::vec3(cos(event_data.forward_h), event_data.forward_v, sin(event_data.forward_h)),
+						glm::vec3(cos(event_data.forward_v) * cos(event_data.forward_h), sin(event_data.forward_v), cos(event_data.forward_v) * sin(event_data.forward_h)),
 					glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 clip_view = glm::perspective(1.570796327f, 4.0f / 3.0f, 0.01f, 100.0f);
+	glm::mat4 clip_view = glm::perspective(1.570796327f, 4.0f / 3.0f, 0.01f, 1000.0f);
 	glm::mat4 clip_model = clip_view * View;
 	writeUniformToShaderProgram(shader_program, "clip_model", glm::value_ptr(clip_model), mat4fv);
 
@@ -81,9 +83,18 @@ void display(EventData event_data, ShaderProgram *shader_program)
 	writeUniformBlockToShaderProgram(shader_program, "uniforms", "light_pos", data_light_pos, 12, false);
 	writeUniformBlockToShaderProgram(shader_program, "uniforms", "light_color", data_light_color, 12, true);
 
-	int i;
-	for (i = 0; i < meshes.size(); i++)
+	meshDrawSelf(meshes[0]);
+/*
+	if (event_data.alarm)
 	{
-		meshDrawSelf(meshes[i]);
+		float ambient[] = {1.0f, 0.0f, 0.0f};
+		writeUniformBlockToShaderProgram(shader_program, "uniforms", "ambient", ambient, 12, false);
 	}
+	else if (!event_data.alarm)
+	{
+		float ambient[] = {0.1f, 0.2f, 0.1f};
+		writeUniformBlockToShaderProgram(shader_program, "uniforms", "ambient", ambient, 12, false);
+	}
+	changeState(&drone_entity, event_data.drone_state);
+*/
 }

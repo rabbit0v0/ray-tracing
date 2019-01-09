@@ -9,6 +9,4 @@
 
 *Clean*:
 
-    cd build
-
-    rm -rf *f *`
+    rm -rf build

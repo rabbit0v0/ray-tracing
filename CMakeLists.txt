@@ -13,9 +13,7 @@ set (EXTRA_LIBS ${EXTRA_LIBS} module
                               m)
 
 add_executable (openGL_demo ${PROJECT_SOURCE_DIR}/src/main.cpp)
+target_compile_options(openGL_demo PUBLIC $<$<CONFIG:Debug>:-g>)
+target_compile_definitions(openGL_demo PUBLIC $<$<CONFIG:Debug>:ShaderLoader_DEBUG>)
 
 target_link_libraries (openGL_demo ${EXTRA_LIBS})
-file (REMOVE_RECURSE ${PROJECT_SOURCE_DIR}/build/shaders)
-file (REMOVE_RECURSE ${PROJECT_SOURCE_DIR}/build/res)
-file (COPY ${PROJECT_SOURCE_DIR}/src/shaders DESTINATION .)
-file (COPY ${PROJECT_SOURCE_DIR}/res DESTINATION .)

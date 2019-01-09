@@ -10,6 +10,7 @@ typedef struct MeshObj_
 	GLuint v_buffer;
 	GLuint vn_buffer;
 	GLuint vt_buffer;
+	GLuint texture_obj;
 	GLuint v_num;
 } MeshObj;
 

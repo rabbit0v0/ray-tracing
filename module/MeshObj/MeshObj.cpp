@@ -3,8 +3,10 @@
 
 #include <stdio.h>
 #include <cassert>
+#define STBI_ONLY_JPEG
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
-//#define PRINT_LINE printf("%s: %d\n", __FILE__, __LINE__)
 
 enum Attrib_IDs
 {
@@ -35,16 +37,35 @@ MeshObj meshCreate(ShaderProgram *shader_program, const char *obj_name, const ch
 	glGenBuffers(1, &(mesh_obj.v_buffer));
 	glGenBuffers(1, &(mesh_obj.vn_buffer));
 	glGenBuffers(1, &(mesh_obj.vt_buffer));
+
+	glGenTextures(1, &(mesh_obj.texture_obj));
+	glBindTexture(GL_TEXTURE_2D, mesh_obj.texture_obj);
+
+    int x, y, n;
+    unsigned char *data = stbi_load("../res/test.jpg", &x, &y, &n, 0);
+	assert(data);
+	assert(n == 3);
+
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, x - 1, y - 1);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, x, y, GL_RGB, GL_FLOAT, (void *)data);
+    stbi_image_free(data);
+
 	glGenVertexArrays(1, &(mesh_obj.vao));
 	glBindVertexArray(mesh_obj.vao);
 
 	GLfloat *temp_v_buffer = (GLfloat *)malloc(200 * attrib.vertices.size() * sizeof(tinyobj::real_t));
 	GLfloat *temp_n_buffer = (GLfloat *)malloc(200 * attrib.normals.size() * sizeof(tinyobj::real_t));
-	GLfloat *temp_t_buffer = (GLfloat *)malloc(200 * attrib.texcoords.size() * sizeof(tinyobj::real_t));
+	GLfloat *temp_t_buffer = (GLfloat *)malloc(100000000 * sizeof(tinyobj::real_t));
 
 	int v_offset = 0;
 	int n_offset = 0;
 	int t_offset = 0;
+
+	int te = 0;
 
 	for (size_t s = 0; s < shapes.size(); s++)
 	{
@@ -72,17 +93,19 @@ MeshObj meshCreate(ShaderProgram *shader_program, const char *obj_name, const ch
 				temp_n_buffer[n_offset + 2] = nz;
 				n_offset += 3;
 
-//				tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
-//				tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
+				tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
+				tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
 
-//				temp_t_buffer[t_offset] = tx;
-//				temp_t_buffer[t_offset + 1] = ty;
+				temp_t_buffer[t_offset] = te % (x * y) / y % x;
+				temp_t_buffer[t_offset + 1] = te % (x * y) % y;
+				te++;
 				t_offset += 2;
+
 			}
 			index_offset += fv;
-			//			shapes[s].mesh.material_ids[f];
 		}
 	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_obj.v_buffer);
 	glBufferData(GL_ARRAY_BUFFER, v_offset * sizeof(tinyobj::real_t), temp_v_buffer, GL_STATIC_DRAW);
 	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -93,20 +116,22 @@ MeshObj meshCreate(ShaderProgram *shader_program, const char *obj_name, const ch
 	glEnableVertexAttribArray(VertexNormal);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh_obj.vt_buffer);
 	glBufferData(GL_ARRAY_BUFFER, t_offset * sizeof(tinyobj::real_t), temp_t_buffer, GL_STATIC_DRAW);
-//	glVertexAttribPointer(VertexTexcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
-//	glEnableVertexAttribArray(VertexTexcoord);
+	glVertexAttribPointer(VertexTexcoord, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(VertexTexcoord);
+
 
 	free(temp_v_buffer);
 	free(temp_n_buffer);
 	free(temp_t_buffer);
 
-	mesh_obj.v_num = v_offset / 3;
+
+	mesh_obj.v_num = v_offset / 3u;
 
 
-	GLfloat ambient[] = {0.3f, 0.3f, 0.3f};
-	GLfloat diffuse = 0.3f;
-	GLfloat specular = 0.3f;
-	GLfloat shininess = 20.0f;
+	GLfloat ambient[] = {0.1f, 0.2f, 0.1f};
+	GLfloat diffuse = 0.5f;
+	GLfloat specular = 0.1f;
+	GLfloat shininess = 16.0f;
 	GLfloat strength = 10.0f;
 	writeUniformBlockToShaderProgram(mesh_obj.shader_program, "uniforms", "ambient", ambient, 12, false);
 	writeUniformBlockToShaderProgram(mesh_obj.shader_program, "uniforms", "diffuse", &diffuse, 4, false);
